@@ -32,19 +32,50 @@ from DISClib.DataStructures import mapentry as me
 from DISClib.Algorithms.Sorting import shellsort as sa
 assert cf
 
-"""
-Se define la estructura de un catálogo de videos. El catálogo tendrá dos listas, una para los videos, otra para las categorias de
-los mismos.
-"""
+
 
 # Construccion de modelos
+def newCatalog():
+    catalog = {'artworks': None,
+               'mediums': None}
+    catalog['artworks'] = lt.newList('SINGLE_LINKED', compareartworksIds)
+
+    catalog['mediums'] = mp.newMap(138500,
+                                maptype='PROBING',
+                                loadfactor=0.5,
+                                comparefunction=compareMediumNames)
 
 # Funciones para agregar informacion al catalogo
-
+def addBook(catalog, artwork):
+    lt.addLast(catalog['artworks'], artwork)
+    mp.put(catalog['bookIds'], book['goodreads_book_id'], book)
+    authors = book['authors'].split(",")  # Se obtienen los autores
+    for author in authors:
+        addBookAuthor(catalog, author.strip(), book)
+    addBookYear(catalog, book)
 # Funciones para creacion de datos
 
 # Funciones de consulta
 
 # Funciones utilizadas para comparar elementos dentro de una lista
+def compareartworksIds(id1, id2):
+    """
+    Compara dos ids de dos obras de arte
+    """
+    if (id1 == id2):
+        return 0
+    elif id1 > id2:
+        return 1
+    else:
+        return -1
+
+def compareMediumNames(name, medium):
+    mediumentry = me.getKey(medium)
+    if (name == mediumentry):
+        return 0
+    elif (name > mediumentry):
+        return 1
+    else:
+        return -1
 
 # Funciones de ordenamiento

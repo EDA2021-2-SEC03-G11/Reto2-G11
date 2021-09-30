@@ -34,25 +34,55 @@ se hace la solicitud al controlador para ejecutar la
 operación solicitada
 """
 
+# Funciones para la impresión de resultados
+
+
+
+
+
+#Menu de opciones
 def printMenu():
     print("Bienvenido")
-    print("1- Cargar información en el catálogo")
-    print("2- ")
+    print("1- Inicializar Catálogo")
+    print("2- Cargar información en el catálogo")
+    print("3- Consultar las n obras mas antiguas con un medio especifico")
+    print("0- Salir")
 
-catalog = None
 
-"""
-Menu principal
-"""
+
+# Funciones de inicializacion
+def initCatalog():
+    """
+    Inicializa el catalogo 
+    """
+    return controller.initCatalog()
+
+def loadData(catalog):
+    """
+    Carga las obras de arte en el catalogo
+    """
+    controller.loadData(catalog)
+
+
+
+# Menu principal
 while True:
     printMenu()
     inputs = input('Seleccione una opción para continuar\n')
+
     if int(inputs[0]) == 1:
-        print("Cargando información de los archivos ....")
+        print("Inicializando Catálogo ....")
+        cont = controller.initCatalog()
 
     elif int(inputs[0]) == 2:
-        pass
+        print("Cargando información de los archivos ....")
+        controller.loadData(cont)
+        print('Obras de arte cargadas: ' + str(controller.booksSize(cont)))
+        print('Autores cargados: ' + str(controller.authorsSize(cont)))
+        print('Géneros cargados: ' + str(controller.tagsSize(cont)))
 
     else:
         sys.exit(0)
 sys.exit(0)
+
+#TODO Editar los prints y la opcion 3
