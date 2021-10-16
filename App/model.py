@@ -37,83 +37,63 @@ assert cf
 # Construccion de modelos
 def newCatalog():
     catalog = {'artworks': None,
-               'mediums': None,
-               'artworkIds': None,
-               "years": None}
-    catalog['artworks'] = lt.newList('SINGLE_LINKED', compareartworksIds)
+               'artists': None}
+    catalog['artworks'] = lt.newList('SINGLE_LINKED', cmpfunction=compareartworksIds)
+    catalog['artists'] = lt.newList('SINGLE_LINKED', cmpfunction=compareArtists)
 
-    catalog['mediums'] = mp.newMap(138500,
-                                maptype='PROBING',
-                                loadfactor=0.5,
-                                comparefunction=compareMediumNames)
-    
-    catalog['artworkIds'] = mp.newMap(138500,
-                                   maptype='CHAINING',
-                                   loadfactor=4.0,
-                                   comparefunction=compareMapartworkIds) 
-
-
-
+    catalog["artist_work"]= mp.newMap(138500, maptype= "PROBING", loadfactor= 0.5, comparefunction= compareArtistsName)
+    return catalog
 
 
 # Funciones para agregar informacion al catalogo
 def addArtwork(catalog, artwork):
     lt.addLast(catalog['artworks'], artwork)
-    mp.put(catalog['artworkIds'], artwork['ObjectID'], artwork)
-    artists = artwork['artists'].split(",")  # Se obtienen los autores
-    for artist in artists:
-        addArtist(catalog, artist.strip(), artwork)
-    addBookYear(catalog, artwork)   
 
-def addArtist(catalog, artistname, artwork):
+def addArtist(catalog, artist):
+    lt.addLast(catalog['artists'], artist)
+
+def creatArtistWork(catalog):
+    for artist in lt.iterator(catalog["artists"]):
+        name= artist["DisplayName"]
+        artistWork= lt.newList('SINGLE_LINKED', cmpfunction=compareartworksIds)
+        for artwork in lt.iterator(catalog["artworks"]):
+            if artist["ConstituentID"] in eval(artwork["ConstituentID"]):
+                lt.addLast(artistWork, artwork)
+        if not mp.contains(catalog["artist_work"], name):
+            mp.put(catalog["artist_work"], name, artistWork)
+        elif mp.contains(catalog["artist_work"], artist):
+            mapWork = mp.get(catalog["artist_work"], artist)
+            mapWork = me.getValue(mapWork)
+            for work in lt.iterator(mapWork):
+                lt.addLast(artistWork, work)
+            mp.put(catalog["artist_work"], name, artistWork)
+
+
+def addArtist2(catalog, artist):
     authors = catalog['authors']
-    existauthor = mp.contains(authors, artistname)
+    existauthor = mp.contains(authors, artist)
     if existauthor:
-        entry = mp.get(authors, artistname)
+        entry = mp.get(authors, artist)
         author = me.getValue(entry)
     else:
-        author = newAuthor(artistname)
-        mp.put(authors, artistname, author)
+        author = newAuthor(artist)
+        mp.put(authors, artist, author)
     lt.addLast(author['artworks'], artwork)
-    
-def addBookYear(catalog, artwork):
-    try:
-        years = catalog['years']
-        if (artwork['Date'] != ''):
-            pubyear = artwork['Date']
-            pubyear = int(float(pubyear))
-        else:
-            pubyear = 2020
-        existyear = mp.contains(years, pubyear)
-        if existyear:
-            entry = mp.get(years, pubyear)
-            year = me.getValue(entry)
-        else:
-            year = newYear(pubyear)
-            mp.put(years, pubyear, year)
-        lt.addLast(year['artworks'], artwork)
-    except Exception:
-        return None
 
 
 
 # Funciones para creacion de datos
-def newAuthor(name):
-    author = {'name': "",
-              "artists": None}
-    author['name'] = name
-    author['artists'] = lt.newList('SINGLE_LINKED', compareAuthorsByName)
-    return author
-
-def newYear(pubyear):
-    """
-    Esta funcion crea la estructura de libros asociados
-    a un año.
-    """
-    entry = {'year': "", "books": None}
-    entry['year'] = pubyear
-    entry['books'] = lt.newList('SINGLE_LINKED', compareYears)
-    return entry
+def newArtist(Ids, displayname, artistbio, nacionality, gender, begindate, enddate, wikiQID, ULAN ):
+    artist = {'ConstituentID': Ids,
+              "DisplayName": displayname,
+              "ArtistBio": artistbio, 
+              "Nationality": nacionality, 
+              "Gender": gender,
+              "BeginDate": begindate,
+              "EndDate": enddate,
+              "Wiki QID": wikiQID,
+              "ULAN": ULAN}
+    return artist
     
 # Funciones de consulta
 
@@ -129,30 +109,18 @@ def compareartworksIds(id1, id2):
     else:
         return -1
 
-def compareMediumNames(name, medium):
-    mediumentry = me.getKey(medium)
-    if (name == mediumentry):
+def compareArtists(artist1, artist2):
+    if (artist1["ConstituentID"] == artist2["ConstituentID"]):
         return 0
-    elif (name > mediumentry):
+    elif artist1["ConstituentID"] > artist2["ConstituentID"]:
         return 1
     else:
         return -1
 
-def compareMapartworkIds(id, entry):
-    identry = me.getKey(entry)
-    if (int(id) == int(identry)):
+def compareArtistsName(artist1, artist2):
+    if str(artist1["DisplayName"]) == str(artist2["DisplayName"]):
         return 0
-    elif (int(id) > int(identry)):
-        return 1
-    else:
-        return -1
-
-
-def compareAuthorsByName(keyname, author):
-    authentry = me.getKey(author)
-    if (keyname == authentry):
-        return 0
-    elif (keyname > authentry):
+    elif str(artist1["DisplayName"]) > str(artist2["DisplayName"]):
         return 1
     else:
         return -1
