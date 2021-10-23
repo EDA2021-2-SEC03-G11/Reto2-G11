@@ -31,77 +31,89 @@ from DISClib.ADT import map as mp
 from DISClib.DataStructures import mapentry as me
 from DISClib.Algorithms.Sorting import shellsort as sa
 assert cf
-
-
-
-# Construccion de modelos
 def newCatalog():
     catalog = {'artworks': None,
-               'artists': None}
-    catalog['artworks'] = lt.newList('SINGLE_LINKED', cmpfunction=compareartworksIds)
-    catalog['artists'] = lt.newList('SINGLE_LINKED', cmpfunction=compareArtists)
+               'artists': None,
+               "artistIds": None,
+               "years": None,
+               "artworkIds":None}
+    catalog['artworks'] = lt.newList('SINGLE_LINKED', compareArtworkIds)
+    catalog['artists'] = lt.newList('SINGLE_LINKED', compareArtistIds)
 
-    catalog["artist_work"]= mp.newMap(138500, maptype= "PROBING", loadfactor= 0.5, comparefunction= compareArtistsName)
+    catalog["artistIds"]= mp.newMap(15300, 
+                            maptype= "PROBING", 
+                            loadfactor= 0.5, 
+                            comparefunction= compareMapArtistIds)
+    
+    catalog["years"]= mp.newMap(300000, 
+                            maptype= "PROBING", 
+                            loadfactor= 0.5, 
+                            comparefunction= compareMapYear)
+    
+    catalog["artworkIds"]= mp.newMap(138500, 
+                            maptype= "PROBING", 
+                            loadfactor= 0.5, 
+                            comparefunction= compareMapArtworkIds)
+
     return catalog
-
-
-# Funciones para agregar informacion al catalogo
-def addArtwork(catalog, artwork):
-    lt.addLast(catalog['artworks'], artwork)
 
 def addArtist(catalog, artist):
     lt.addLast(catalog['artists'], artist)
-
-def creatArtistWork(catalog):
-    for artist in lt.iterator(catalog["artists"]):
-        name= artist["DisplayName"]
-        artistWork= lt.newList('SINGLE_LINKED', cmpfunction=compareartworksIds)
-        for artwork in lt.iterator(catalog["artworks"]):
-            if artist["ConstituentID"] in eval(artwork["ConstituentID"]):
-                lt.addLast(artistWork, artwork)
-        if not mp.contains(catalog["artist_work"], name):
-            mp.put(catalog["artist_work"], name, artistWork)
-        elif mp.contains(catalog["artist_work"], artist):
-            mapWork = mp.get(catalog["artist_work"], artist)
-            mapWork = me.getValue(mapWork)
-            for work in lt.iterator(mapWork):
-                lt.addLast(artistWork, work)
-            mp.put(catalog["artist_work"], name, artistWork)
+    mp.put(catalog['artistIds'], artist['ConstituentID'], artist)
+    addArtistYear(catalog, artist)
 
 
-def addArtist2(catalog, artist):
-    authors = catalog['authors']
-    existauthor = mp.contains(authors, artist)
-    if existauthor:
-        entry = mp.get(authors, artist)
-        author = me.getValue(entry)
-    else:
-        author = newAuthor(artist)
-        mp.put(authors, artist, author)
-    lt.addLast(author['artworks'], artwork)
-
-
-
-# Funciones para creacion de datos
-def newArtist(Ids, displayname, artistbio, nacionality, gender, begindate, enddate, wikiQID, ULAN ):
-    artist = {'ConstituentID': Ids,
-              "DisplayName": displayname,
-              "ArtistBio": artistbio, 
-              "Nationality": nacionality, 
-              "Gender": gender,
-              "BeginDate": begindate,
-              "EndDate": enddate,
-              "Wiki QID": wikiQID,
-              "ULAN": ULAN}
-    return artist
+def addArtistYear(catalog, artist):
+    try:
+        years = catalog['years']
+        if (artist['BeginDate'] != ''):
+            pubyear = artist['BeginDate']
+            pubyear = int(float(pubyear))
+        else:
+            pubyear = 0
+        existyear = mp.contains(years, pubyear)
+        if existyear:
+            entry = mp.get(years, pubyear)
+            year = me.getValue(entry)
+        else:
+            year = newYear(pubyear)
+            mp.put(years, pubyear, year)
+        lt.addLast(year['artists'], artist)
     
-# Funciones de consulta
+    except Exception:
+        return None
 
-# Funciones utilizadas para comparar elementos dentro de una lista
-def compareartworksIds(id1, id2):
-    """
-    Compara dos ids de dos obras de arte
-    """
+def newYear(pubyear):
+    entry = {'year': "", "artists": None}
+    entry['year'] = pubyear
+    entry['artists'] = lt.newList('SINGLE_LINKED', compareYears)
+    return entry
+
+def getArtistsByRange(catalog, initialYear, finalYear):
+    ch= initialYear
+    ListadeAños= lt.newList('SINGLE_LINKED')
+    while ch <= finalYear:
+        year = mp.get(catalog['years'], ch)
+        if year:
+            r= me.getValue(year)['artists']
+            for cosa in lt.iterator(r):
+                lt.addLast(ListadeAños, cosa)
+        ch= ch + 1
+    return (ListadeAños)
+
+def addArtwork(catalog, artwork):
+    lt.addLast(catalog['artworks'], artwork)
+    mp.put(catalog['artworkIds'], artwork['ObjectID'], artwork)
+    
+def artworksSize(catalog):
+    return lt.size(catalog['artworks'])
+
+def artistsSize(catalog):
+    return lt.size(catalog['artists'])
+# ==============================
+# Funciones de Comparacion
+# ==============================
+def compareArtworkIds(id1, id2):
     if (id1 == id2):
         return 0
     elif id1 > id2:
@@ -109,20 +121,45 @@ def compareartworksIds(id1, id2):
     else:
         return -1
 
-def compareArtists(artist1, artist2):
-    if (artist1["ConstituentID"] == artist2["ConstituentID"]):
+def compareArtistIds(id1, id2):
+    if (id1 == id2):
         return 0
-    elif artist1["ConstituentID"] > artist2["ConstituentID"]:
+    elif id1 > id2:
         return 1
     else:
         return -1
 
-def compareArtistsName(artist1, artist2):
-    if str(artist1["DisplayName"]) == str(artist2["DisplayName"]):
+def compareMapArtistIds(id, entry):
+    identry = me.getKey(entry)
+    if (int(id) == int(identry)):
         return 0
-    elif str(artist1["DisplayName"]) > str(artist2["DisplayName"]):
+    elif (int(id) > int(identry)):
         return 1
     else:
         return -1
 
-# Funciones de ordenamiento
+def compareMapYear(id, tag):
+    tagentry = me.getKey(tag)
+    if (id == tagentry):
+        return 0
+    elif (id > tagentry):
+        return 1
+    else:
+        return 0
+
+def compareYears(year1, year2):
+    if (int(year1) == int(year2)):
+        return 0
+    elif (int(year1) > int(year2)):
+        return 1
+    else:
+        return 0
+
+def compareMapArtworkIds(id, entry):
+    identry = me.getKey(entry)
+    if (int(id) == int(identry)):
+        return 0
+    elif (int(id) > int(identry)):
+        return 1
+    else:
+        return -1

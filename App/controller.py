@@ -35,17 +35,26 @@ def loadData(catalog):
     loadArtists(catalog)
 
 def loadArtworks(catalog):
-    artworksfile = cf.data_dir + 'Artworks-utf8-small.csv'
+    artworksfile = cf.data_dir + 'Artworks-utf8-large.csv'
     input_file = csv.DictReader(open(artworksfile, encoding='utf-8'))
     for artwork in input_file:
         model.addArtwork(catalog, artwork)
 
 def loadArtists(catalog):
-    artistsfile = cf.data_dir + 'Artists-utf8-small.csv'
+    artistsfile = cf.data_dir + 'Artists-utf8-large.csv'
     input_file = csv.DictReader(open(artistsfile, encoding='utf-8'))
     for artist in input_file:
         model.addArtist(catalog, artist)
 
+def artworksSize(catalog):
+    return model.artworksSize(catalog)
+
+def artistsSize(catalog):
+    return model.artistsSize(catalog)
+
 # Funciones de ordenamiento
 
 # Funciones de consulta sobre el catálogo
+def getArtistsByRange(catalog, initialYear, finalYear):
+    artists = model.getArtistsByRange(catalog, initialYear, finalYear)
+    return artists

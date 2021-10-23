@@ -20,50 +20,79 @@
  * along withthis program.  If not, see <http://www.gnu.org/licenses/>.
  """
 
+
 import config as cf
 import sys
 import controller
 from DISClib.ADT import list as lt
 assert cf
+from DISClib.DataStructures import mapentry as me
 
+def printArtistsByBegindate(total, initialYear, finalYear):
+    tamaño = int(lt.size(total))
+    t = tamaño - 3
+    print("--------------------------------------------------------")
+    print("Hay " + str(tamaño) + " artistas nacidos entre " + str(initialYear) + " y " + str(finalYear))
+    print("--------------------------------------------------------")
+    if t > 0:
+        
+        if tamaño > 3 and tamaño < 7:
+            for n in lt.iterator(total):
+                
+                print("Nombre del artista: " + str(n["DisplayName"]) +"\n"
+                + " Año de nacimiento del artista: " + str(n["BeginDate"]) +"\n"
+                + " Año de fallecimiento del artista: " + str(n["EndDate"]) +"\n"
+                + " Nacionalidad: " + str(n["Nationality"]) +"\n"
+                + " Género: " + str(n["Gender"]))
+                print("--------------------------------------------------------")
+        else:
+            m= 0
+            for n in lt.iterator(total): 
+                m= m + 1
+                print("Nombre del artista: " + str(n["DisplayName"]) +"\n"
+                + " Año de nacimiento del artista: " + str(n["BeginDate"]) +"\n"
+                + " Año de fallecimiento del artista: " + str(n["EndDate"]) +"\n"
+                + " Nacionalidad: " + str(n["Nationality"]) +"\n"
+                + " Género: " + str(n["Gender"]))
+                print("--------------------------------------------------------")
+                if m==3:
+                    break
 
-"""
-La vista se encarga de la interacción con el usuario
-Presenta el menu de opciones y por cada seleccion
-se hace la solicitud al controlador para ejecutar la
-operación solicitada
-"""
+            letra= 1
+            for n in lt.iterator(total): 
+                if letra > (tamaño - 3):
+                    print("Nombre del artista: " + str(n["DisplayName"]) +"\n"
+                    + " Año de nacimiento del artista: " + str(n["BeginDate"]) +"\n"
+                    + " Año de fallecimiento del artista: " + str(n["EndDate"]) +"\n"
+                    + " Nacionalidad: " + str(n["Nationality"]) +"\n"
+                    + " Género: " + str(n["Gender"]))
+                    print("--------------------------------------------------------")
+                
+                    if letra==tamaño:
+                        break
+                letra= letra + 1   
+    else:
+        if tamaño>0:
+            for n in lt.iterator(total):
+                print("\n")
+                print("Nombre del artista: " + str(n["DisplayName"]) +"\n"
+                + " Año de nacimiento del artista: " + str(n["BeginDate"]) +"\n"
+                + " Año de fallecimiento del artista: " + str(n["EndDate"]) +"\n"
+                + " Nacionalidad: " + str(n["Nationality"]) +"\n"
+                + " Género: " + str(n["Gender"]))
+                print("--------------------------------------------------------")
+        else:
+            print("No hay muestra")
 
-# Funciones para la impresión de resultados
-
-
-
-
-
-#Menu de opciones
 def printMenu():
+    print("\n")
+    print("*******************************************")
     print("Bienvenido")
-    print("1- Inicializar Catálogo")
-    print("2- Cargar información en el catálogo")
-    print("3- Consultar las n obras mas antiguas con un medio especifico")
-    print("0- Salir")
-
-
-
-# Funciones de inicializacion
-def initCatalog():
-    """
-    Inicializa el catalogo 
-    """
-    return controller.initCatalog()
-
-def loadData(catalog):
-    """
-    Carga las obras de arte en el catalogo
-    """
-    controller.loadData(catalog)
-
-
+    print("1- Inicializar Catálogo.")
+    print("2- Cargar información en el catálogo.")
+    print("3- Consultar y listar cronológicamente los artistas que nacieron en un rango de años.")
+    print("0- Salir.")
+    print("*******************************************")
 
 # Menu principal
 while True:
@@ -73,16 +102,22 @@ while True:
     if int(inputs[0]) == 1:
         print("Inicializando Catálogo ....")
         cont = controller.initCatalog()
-
+   
     elif int(inputs[0]) == 2:
         print("Cargando información de los archivos ....")
         controller.loadData(cont)
-        print('Obras de arte cargadas: ' + str(controller.booksSize(cont)))
-        print('Autores cargados: ' + str(controller.authorsSize(cont)))
-        print('Géneros cargados: ' + str(controller.tagsSize(cont)))
+        print('Obras de arte cargadas: ' + str(controller.artworksSize(cont)))
+        print('Artistas cargados: ' + str(controller.artistsSize(cont)))
 
+    elif int(inputs[0]) == 3:
+        print("\nBuscando y listando cronológicamente los artistas que nacieron en un rango de años: ")
+        initialYear = input("Fecha Inicial (YYYY): ")
+        finalYear = input("Fecha Final (YYYY): ")
+        total = controller.getArtistsByRange(cont, int(initialYear), int(finalYear))
+        printArtistsByBegindate(total, int(initialYear), int(finalYear))
+        
     else:
         sys.exit(0)
-sys.exit(0)
+sys.exit(0) 
 
-#TODO Editar los prints y la opcion 3
+
